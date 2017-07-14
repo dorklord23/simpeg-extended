@@ -5,8 +5,8 @@
 // Variables
 
 // SIMPEG BNN's IP address
-//let address = "103.3.70.11"
-let address = "0.0.0.0"
+let address = "103.3.70.11"
+//let address = "0.0.0.0"
 
 if (process.argv[2] === 'localhost')
 {
