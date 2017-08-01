@@ -63,7 +63,7 @@ function webhook_endpoints(app, db)
         {
             console.log("Validating webhook");
             console.dir(req.query);
-            res.sendStatus(200).send(`${req.query['hub.challenge']}`)
+            res./*sendStatus(200).*/send(`${req.query['hub.challenge']}`)
         }
         
         else
