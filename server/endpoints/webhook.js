@@ -28,11 +28,11 @@ function webhook_endpoints(app, db)
     // 2. Webhook for LINE
     function line_callback(req, res)
     {
-        console.log(req.body.text)
+        console.log(req.body)
         res.send(req.body)
     }
     
-    // https://103.3.70.11/bots/line/notifications/
+    // https://c6fd29f5.ngrok.io/bots/line/notifications
     app.post('/bots/line/notifications', line_callback)
 }
 
