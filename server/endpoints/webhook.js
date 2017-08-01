@@ -59,7 +59,7 @@ function webhook_endpoints(app, db)
     // 3.a. Webhook Verification for Facebook Messenger
     function fb_verify_callback(req, res)
     {
-        if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === '130t_51mP39_13nN')
+        if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === 'verify_token')
         {
             console.log("Validating webhook");
             res.sendStatus(200).send(req.query['hub.challenge']);
