@@ -50,7 +50,7 @@ function webhook_endpoints(app, db)
     // 3. Webhook for Facebook Messenger
     function fb_callback(req, res)
     {
-        console.log(req.body)
+        console.trace(req.body)
         res.send(req.body)
     }
 
@@ -63,7 +63,7 @@ function webhook_endpoints(app, db)
         {
             console.log("Validating webhook");
             console.dir(req.query);
-            res./*sendStatus(200).*/send(`${req.query['hub.challenge']}`)
+            res.send(`${req.query['hub.challenge']}`)
         }
         
         else
