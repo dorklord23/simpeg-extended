@@ -14,7 +14,8 @@ if (process.argv[2] === 'localhost')
 }
 
 // Telegram requires webhook with port 443,80,88 or 8443.
-let port = 8443
+// LINE does not enforce particular ports to use
+let port = 8080
 
 // Helmet Initialization
 let helmet = require('helmet')

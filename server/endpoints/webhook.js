@@ -24,6 +24,16 @@ function webhook_endpoints(app, db)
     }
 
     app.post(`/telegram`, telegram_callback)
+    
+    // 2. Webhook for LINE
+    function line_callback(req, res)
+    {
+        console.log(req.body.text)
+        res.send(req.body)
+    }
+    
+    // https://103.3.70.11/bots/line/notifications/
+    app.post('/bots/line/notifications', line_callback)
 }
 
 module.exports = webhook_endpoints
