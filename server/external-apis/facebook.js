@@ -2,7 +2,7 @@
 
 // Copyright 2017 TRI R.A. WIBOWO
 
-module.exports = class Line
+module.exports = class Facebook
 {
     constructor()
     {

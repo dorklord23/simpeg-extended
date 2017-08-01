@@ -40,7 +40,7 @@ function webhook_endpoints(app, db)
 }
 */
         //console.log(req.body.events[0].source)
-        console.log(req.body)
+        console.log(req.body.entry[0].messaging)
         res.send(req.body)
     }
     
