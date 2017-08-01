@@ -50,7 +50,7 @@ function webhook_endpoints(app, db)
     // 3. Webhook for Facebook Messenger
     function fb_callback(req, res)
     {
-        console.dir(req.body)
+        console.dir(req.body.entry[0].messaging)
         res.send(req.body)
     }
 
