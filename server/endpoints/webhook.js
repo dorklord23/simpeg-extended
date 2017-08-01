@@ -28,7 +28,9 @@ function webhook_endpoints(app, db)
     // 2. Webhook for LINE
     function line_callback(req, res)
     {
-        console.log(req.body.events[0].source)
+        // Tri's user ID : U035d6dacdb93f22e4445ae73eef4ff44
+        //console.log(req.body.events[0].source)
+        console.log(req.body)
         res.send(req.body)
     }
     
