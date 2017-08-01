@@ -28,7 +28,7 @@ function webhook_endpoints(app, db)
     // 2. Webhook for LINE
     function line_callback(req, res)
     {
-        console.log(req.body)
+        console.log(req.body.events[0].source)
         res.send(req.body)
     }
     
