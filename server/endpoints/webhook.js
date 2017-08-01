@@ -62,6 +62,7 @@ function webhook_endpoints(app, db)
         if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === 'verify_token')
         {
             console.log("Validating webhook");
+            console.dir(req.query);
             res.sendStatus(200).send(req.query['hub.challenge']);
         }
         
