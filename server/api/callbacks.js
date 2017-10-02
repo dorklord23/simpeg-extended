@@ -128,17 +128,17 @@ class Callbacks
             //result.nama = users[0].nama
             result =
             {
-                pangkat : users[0].pangkat,
-                gelar_depan : users[0].gelar_depan,
-                nama : users[0].nama,
-                gelar_belakang : users[0].gelar_blkg,
-                jabatan : users[0].jabatan,
-                golongan : users[0].golongan,
-                eselon : users[0].eselon,
-                eselon_1 : users[0].eselon_1,
-                eselon_2 : users[0].eselon_2,
-                eselon_3 : users[0].eselon_3,
-                eselon_4 : users[0].eselon_4
+                pangkat : typeof users[0].pangkat === 'undefined' ? '' : users[0].pangkat,
+                gelar_depan : typeof users[0].gelar_depan === 'undefined' ? '' : users[0].gelar_depan,
+                nama : typeof users[0].nama === 'undefined' ? '' : users[0].nama,
+                gelar_belakang : typeof users[0].gelar_blkg === 'undefined' ? '' : users[0].gelar_blkg,
+                jabatan : typeof users[0].jabatan === 'undefined' ? '' : users[0].jabatan,
+                golongan : typeof users[0].golongan === 'undefined' ? '' : users[0].golongan,
+                eselon : typeof users[0].eselon === 'undefined' ? '' : users[0].eselon,
+                eselon_1 : typeof users[0].eselon_1 === 'undefined' ? '' : users[0].eselon_1,
+                eselon_2 : typeof users[0].eselon_2 === 'undefined' ? '' : users[0].eselon_2,
+                eselon_3 : typeof users[0].eselon_3 === 'undefined' ? '' : users[0].eselon_3,
+                eselon_4 : typeof users[0].eselon_4 === 'undefined' ? '' : users[0].eselon_2
             }
 
             console.dir(result)
