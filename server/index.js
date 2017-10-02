@@ -2,6 +2,15 @@
 
 // Copyright 2017 Tri R.A. Wibowo
 
+function unhandledRejection(reason, p)
+{
+  console.log(`Possibly Unhandled Rejection at:`)
+  console.dir(p)
+  console.log(`Reason: ${reason}`)
+}
+
+process.on('unhandledRejection', unhandledRejection)
+
 // Variables
 
 // SIMPEG BNN's IP address
@@ -48,9 +57,7 @@ app.use(helmet())
 app.use(sanitize)
 app.use(res_headers)
 
-let postgres = require('pg-promise')()
-let db = postgres('postgres://postgres:l4nte_T751mp3g@127.0.0.1:5432/DBSIMPEG')
-//let db = postgres('postgres://postgres@localhost:5432/DBSIMPEG')
+const db = require('./database/postgresql.js')
 
 // Path initialization
 api_endpoints(app, db)
@@ -58,3 +65,12 @@ webhook_endpoints(app, db)
 
 httpServer.listen(port, address)
 console.log(`Running in http://${address}:${port}/`)
+
+var irc = require('irc');
+var client = new irc.Client('irc.bnn.go.id', 'jin_simpeg', {
+    channels: [],
+});
+
+client.addListener('error', function(message) {
+    console.log('error: ', message);
+});

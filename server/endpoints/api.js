@@ -1,23 +1,17 @@
 "use strict"
 // Copyright 2017 TRI R.A. WIBOWO
 
-function show_error(res, error)
-{
-    console.log(error.stack)
+// Endpoints for the API
 
-    res.send(error.stack)
-}
-
-function show_result(res, result)
-{
-    console.log(result)
-    res.send(result)
-}
+const Callbacks = require('../api/callbacks.js')
 
 function api_endpoints(app, db)
 {
-    app.get(`/iseng`, (req, res) => {res.send('TEST')})
+    const callbacks = new Callbacks(db)
 
+    app.get(`/api/pegawai`, (req, res) => {callbacks.employee(req, res)})
+
+    app.get(`/api/pegawai/ekspor`, (req, res) => {callbacks.employee_export(req, res)})
 }
 
 module.exports = api_endpoints

@@ -4,7 +4,7 @@
 
 var validator = require('validator')
 
-var exceptionList = [/*'hub.challenge', */'phone', 'phoneNumber', 'voucherCode', 'consigneePhoneNumber', 'awbNumber']
+var exceptionList = [/*'hub.challenge', */'nip']
 
 function isNumeric(num)
 {

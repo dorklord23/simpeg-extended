@@ -4,8 +4,10 @@
 
 function set_headers(req, res, next)
 {
-    res.setHeader('access-control-allow-origin', 'http://localhost:3000')
-    res.setHeader('content-type', 'application/json')
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000')
+    //res.setHeader('Content-Type', 'application/json')
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+    res.setHeader('Pragma', 'no-cache')
 
     next()
 }
