@@ -7,7 +7,7 @@ function ssl_endpoints(app)
 {
     app.get(`/ssl_verification/T-XjZT6NFkSbj13q0lDQ4V4XiE2MdzSQximSdAu-jnY`, (req, res) => {res.send('T-XjZT6NFkSbj13q0lDQ4V4XiE2MdzSQximSdAu-jnY.XecrRatmntg81yoI6cB5L0VSqCRFnQyPPQiJxuc3YcQ')})
 
-    app.get(`/ssl_verification/Isk5tJK8c5zGtGoIs3YThPNtwzx3gR_qUiSrO0NuZJE`, (req, res) => {res.send('Isk5tJK8c5zGtGoIs3YThPNtwzx3gR_qUiSrO0NuZJE.XecrRatmntg81yoI6cB5L0VSqCRFnQyPPQiJxuc3YcQ')})
+    app.get(`/ssl_verification/aIC7w8NqNEAYTNOPo1KhmV1fnXY5hFN4ypHhn5QgLNU`, (req, res) => {res.send('aIC7w8NqNEAYTNOPo1KhmV1fnXY5hFN4ypHhn5QgLNU.XecrRatmntg81yoI6cB5L0VSqCRFnQyPPQiJxuc3YcQ')})
 }
 
 module.exports = ssl_endpoints
