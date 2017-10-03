@@ -3,7 +3,7 @@
 
 // Endpoints for the SSL verification
 
-function ssl_endpoints(app, db)
+function ssl_endpoints(app)
 {
     app.get(`/ssl_verification/T-XjZT6NFkSbj13q0lDQ4V4XiE2MdzSQximSdAu-jnY`, (req, res) => {res.send('T-XjZT6NFkSbj13q0lDQ4V4XiE2MdzSQximSdAu-jnY.XecrRatmntg81yoI6cB5L0VSqCRFnQyPPQiJxuc3YcQ')})
 
