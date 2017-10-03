@@ -10,4 +10,4 @@ function ssl_endpoints(app)
     app.get(`/ssl_verification/Isk5tJK8c5zGtGoIs3YThPNtwzx3gR_qUiSrO0NuZJE`, (req, res) => {res.send('Isk5tJK8c5zGtGoIs3YThPNtwzx3gR_qUiSrO0NuZJE.XecrRatmntg81yoI6cB5L0VSqCRFnQyPPQiJxuc3YcQ')})
 }
 
-module.exports = api_endpoints
+module.exports = ssl_endpoints
