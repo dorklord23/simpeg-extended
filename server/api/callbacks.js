@@ -99,7 +99,7 @@ class Callbacks
         {
             req.query = check_params(req, params)
             let result = {}
-            let comment = ''
+            let comment = 'Berhasil menarik data pegawai'
 
             //const users = await db.any('SELECT nip, nama FROM m_pegawai WHERE nip LIKE $1 AND nama LIKE $2 LIMIT $3', [`%${req.query.nip}%`, `%${req.query.nama}%`, req.query.baris])
 
