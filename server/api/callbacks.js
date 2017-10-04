@@ -101,6 +101,27 @@ class Callbacks
             let result = {}
             let comment = 'Berhasil menarik data pegawai'
 
+            // For debugging purpose
+            if (req.query.nip === 'x')
+            {
+                result =
+                {
+                    pangkat : 'pangkat',
+                    gelar_depan : 'gelar_depan',
+                    nama : 'nama',
+                    gelar_belakang : 'gelar_belakang',
+                    jabatan : 'jabatan',
+                    golongan : 'golongan',
+                    eselon : 'eselon',
+                    eselon_1 : 'eselon_1',
+                    eselon_2 : 'eselon_2',
+                    eselon_3 : 'eselon_3',
+                    eselon_4 : 'eselon_4'
+                }
+
+                return show_result(res, result)
+            }
+
             //const users = await db.any('SELECT nip, nama FROM m_pegawai WHERE nip LIKE $1 AND nama LIKE $2 LIMIT $3', [`%${req.query.nip}%`, `%${req.query.nama}%`, req.query.baris])
 
             //const users = await this.db.any("SELECT nip, nama FROM m_pegawai WHERE CASE WHEN $1 <> '%%' THEN nip LIKE $1 ELSE TRUE END AND CASE WHEN $2 <> '%%' THEN nama LIKE $2 ELSE TRUE END LIMIT $3", [`%${req.query.nip}%`, `%${req.query.nama}%`, req.query.baris])
@@ -166,6 +187,8 @@ class Callbacks
         {
             const subquery_1 = "SELECT nmunit, 1 eselon FROM struktur s WHERE kdu1 <> '00' AND kdu2 = '00' AND kdu3 = '000' AND kdu4 = '000'"
             const subquery_2 = "SELECT nmunit, 2 eselon FROM struktur s WHERE kdu1 <> '00' AND kdu2 <> '00' AND kdu3 = '000' AND kdu4 = '000'"
+
+            const query = `() UNION ALL () UNION ALL () UNION ALL ()`
 
             const structure = await this.db.any(query)
 
