@@ -51,6 +51,9 @@ class App extends Component
         }
     }
 
+    get async struktur_organisasi()
+    {}
+
     render()
     {
         return (
@@ -79,17 +82,15 @@ class Eselonisasi extends Component
     {
         return (
             <Paper style={{
-            height: 20,
-            width: 10,
+            height: 900,
+            width: 600,
             margin: 2,
             textAlign: 'center',
             display: 'inline-block'
         }}>
             <List>
-                <Subheader>Hangout Notifications</Subheader>
+                <Subheader>Eselon {this.props.eselon}</Subheader>
                 <ListItem primaryText="Notifications" leftCheckbox={<Checkbox />} />
-                <ListItem primaryText="Sounds" leftCheckbox={<Checkbox />} />
-                <ListItem primaryText="Video sounds" leftCheckbox={<Checkbox />} />
             </List>
             </Paper>
         )
