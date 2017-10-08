@@ -185,14 +185,17 @@ class Callbacks
     {
         try
         {
-            const subquery_1 = "SELECT nmunit, 1 eselon FROM struktur s WHERE kdu1 <> '00' AND kdu2 = '00' AND kdu3 = '000' AND kdu4 = '000'"
-            const subquery_2 = "SELECT nmunit, 2 eselon FROM struktur s WHERE kdu1 <> '00' AND kdu2 <> '00' AND kdu3 = '000' AND kdu4 = '000'"
+            const subquery_1 = "SELECT nmunit nama, 1 eselon, kdu1, kdu2, kdu3, kdu4 FROM struktur s WHERE kdu1 <> '00' AND kdu2 = '00' AND kdu3 = '000' AND kdu4 = '000'"
+            const subquery_2 = "SELECT nmunit nama, 2 eselon, kdu1, kdu2, kdu3, kdu4 FROM struktur s WHERE kdu1 <> '00' AND kdu2 <> '00' AND kdu3 = '000' AND kdu4 = '000'"
+            const subquery_3 = "SELECT nmunit nama, 3 eselon, kdu1, kdu2, kdu3, kdu4 FROM struktur s WHERE kdu1 <> '00' AND kdu2 <> '00' AND kdu3 <> '000' AND kdu4 = '000'"
+            const subquery_4 = "SELECT nmunit nama, 4 eselon, kdu1, kdu2, kdu3, kdu4 FROM struktur s WHERE kdu1 <> '00' AND kdu2 <> '00' AND kdu3 <> '000' AND kdu4 <> '000'"
 
-            const query = `() UNION ALL () UNION ALL () UNION ALL ()`
+            const query = `(${subquery_1}) UNION ALL (${subquery_2}) UNION ALL (${subquery_3}) UNION ALL (${subquery_4})`
 
             const structure = await this.db.any(query)
 
-            show_result(res, result, comment)
+            //show_result(res, structure)
+            show_result(res, structure)
         }
 
         catch(err)
