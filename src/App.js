@@ -1,7 +1,7 @@
 // Copyright 2017 Tri R.A. Wibowo
 
 import React, { Component } from 'react'
-/*import logo from './logo.svg'*/
+//import logo from './logo.svg'
 import './App.css'
 //import Drawer from 'material-ui/Drawer'
 //import MenuItem from 'material-ui/MenuItem'
@@ -13,10 +13,11 @@ import Snackbar from 'material-ui/Snackbar'
 import {List, ListItem} from 'material-ui/List'
 //import {Card, CardActions, CardTitle, CardText} from 'material-ui/Card'
 import FlatButton from 'material-ui/FlatButton'
+import RaisedButton from 'material-ui/RaisedButton'
 //import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table'
-import {Toolbar, /*ToolbarGroup, ToolbarSeparator,*/ ToolbarTitle} from 'material-ui/Toolbar'
+import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar'
 //import SelectField from 'material-ui/SelectField'
-//import Subheader from 'material-ui/Subheader'
+import Subheader from 'material-ui/Subheader'
 import Checkbox from 'material-ui/Checkbox'
 import Dialog from 'material-ui/Dialog'
 
@@ -40,15 +41,16 @@ class App extends Component
         {
             is_network_available : true,
             //data_satker : {eselon1 : [], eselon2 : [], eselon3 : [], eselon4 : []}
-            data_satker : {}
+            data_satker : {},
+            data_jabatan : []
         }
 
         this.checked_items = {eselon1 : [], eselon2 : [], eselon3 : [], eselon4 : []}
 
         this.paper_style =
         {
-            height: 10000,
-            width: 1200,
+            height: '200em',//10000,
+            width: '400em',//1200,
             margin: 20,
             textAlign: 'center',
             display: 'inline-block'
@@ -86,7 +88,107 @@ class App extends Component
 
         catch(err)
         {
-            console.log(err.message)
+            //console.log(err.message)
+            console.trace(err)
+            return []
+        }
+    }
+
+    async cari_jabatan()
+    {
+        try
+        {
+            let kdu = [new Set(), new Set(), new Set(), new Set()]
+
+            for (let a = 0; a < 4; a++)
+            {
+                for (let b = 0; b < this.checked_items['eselon' + (a + 1)].length; b++)
+                {
+                    let item = this.checked_items['eselon' + (a + 1)][b]
+
+                    // Using Set instead of Array so each of its element will be unique
+                    kdu[a].add('"\'' + item.props['data-kdu'][a] + '\'"')
+                }
+            }
+
+            // Converting sets to arrays
+            let kdu1 = [...kdu[0]]
+            let kdu2 = [...kdu[1]]
+            let kdu3 = [...kdu[2]]
+            let kdu4 = [...kdu[3]]
+
+            /*let kdu1 = []
+            let kdu2 = []
+            let kdu3 = []
+            let kdu4 = []
+
+            kdu[0].forEach(el => kdu1.push(`"${el}"`))
+            kdu[1].forEach(el => kdu2.push(`"${el}"`))
+            kdu[2].forEach(el => kdu3.push(`"${el}"`))
+            kdu[3].forEach(el => kdu4.push(`"${el}"`))*/
+
+            kdu1 = `?kdu1=[${kdu1.join(',')}]`
+            kdu2 = `&kdu2=[${kdu2.join(',')}]`
+            kdu3 = `&kdu3=[${kdu3.join(',')}]`
+            kdu4 = `&kdu4=[${kdu4.join(',')}]`
+            //console.log(kdu[0])
+
+            const url = server_url + '/api/jabatan' + kdu1 + kdu2 + kdu3 + kdu4
+
+            console.log(url)
+            const jabatan = await axios.get(url)
+
+            if (jabatan.data.status !== 'berhasil')
+            {
+                return this.setState({data_jabatan : []})
+            }
+
+            console.dir(jabatan.data.data)
+
+            this.setState({data_jabatan : jabatan.data.data})
+        }
+
+        catch(err)
+        {
+            //console.log(err.message)
+            console.trace(err)
+            this.setState({data_jabatan : []})
+        }
+    }
+
+    async compile_long_list()
+    {
+        try
+        {
+            // TODO : Dari this.checked_items, isi query string ke endpoint ini
+            // this.checked_items.eselon1[0].props['data-kdu']
+
+            const map = new Map()
+
+            map.set('eselon1', this.checked_items.eselon1.map(item => {return item.props['data-kdu']}))
+            map.set('eselon2', this.checked_items.eselon2.map(item => {return item.props['data-kdu']}))
+            map.set('eselon3', this.checked_items.eselon3.map(item => {return item.props['data-kdu']}))
+            map.set('eselon4', this.checked_items.eselon4.map(item => {return item.props['data-kdu']}))
+
+            const kdu1 = JSON.stringify(this.checked_items.eselon1.map(item => {return item.props['data-kdu']}))
+            const kdu2 = JSON.stringify(this.checked_items.eselon2.map(item => {return item.props['data-kdu']}))
+            const kdu3 = JSON.stringify(this.checked_items.eselon3.map(item => {return item.props['data-kdu']}))
+            const kdu4 = JSON.stringify(this.checked_items.eselon4.map(item => {return item.props['data-kdu']}))
+
+            const long_list = await axios.get(`${server_url}/api/daftar_panjang?kdu1=${kdu1}&kdu2=${kdu2}&kdu3=${kdu3}&kdu4=${kdu4}`)
+
+            if (long_list.data.status !== 'berhasil')
+            {
+                return []
+            }
+
+            return long_list.data.data
+        }
+
+        catch(err)
+        {
+            //console.log(err.message)
+            console.trace(err)
             return []
         }
     }
@@ -98,7 +200,7 @@ class App extends Component
         {
             if (data.length === 0)
             {
-                this.setState({is_network_available:false})
+                this.setState({is_network_available : false})
             }
 
             else
@@ -113,7 +215,7 @@ class App extends Component
             }
         }
 
-        this.struktur_organisasi().then(struktur_callback.bind(this))
+        this.struktur_organisasi().then(struktur_callback.bind(this)).catch(err => {this.setState({is_network_available:false})})
     }
 
     data_satker(eselon)
@@ -129,7 +231,6 @@ class App extends Component
             kdu4 = '000'*/
 
         this.checked_items['eselon' + eselon] = checked_items
-        console.log(this.checked_items.eselon3)
 
         if (checked_items.length === 0)
         {
@@ -170,7 +271,7 @@ class App extends Component
 
         for (let a = 0; a < this.checked_items.eselon4.length; a++)
         {
-            kdu4.push(this.checked_items.eselon1[a].key.slice(14, 17))
+            kdu4.push(this.checked_items.eselon4[a].key.slice(14, 17))
         }
 
         if (eselon === 1)
@@ -224,6 +325,11 @@ class App extends Component
         this.setState({data_satker : data_satker})
     }
 
+    select_position(event, is_checked)
+    {
+        console.log(typeof is_checked)
+    }
+
     render()
     {
         const jumlah_eselon = 4
@@ -234,8 +340,8 @@ class App extends Component
         //if (this.state.data_satker.eselon4.length > 0)
         if (Object.keys(this.state.data_satker).length > 0)
         {
-            console.dir(this.state.data_satker)
-            dialog = ''
+            //console.dir(this.state.data_satker)
+            dialog = <span></span>
         }
 
         if ( ! this.state.is_network_available)
@@ -258,14 +364,24 @@ class App extends Component
                 <div className="App-intro">
                     <Paper id="contentBox" style={this.content_box}>
                         <Toolbar>
-                            <ToolbarTitle text="Eselonisasi" />
+                            <ToolbarTitle text="Jabatan" />
+                            <ToolbarGroup>
+                                {/*<RaisedButton label="Susun Daftar Panjang" primary={true} onClick={this.cari_jabatan.bind(this)}/>*/}
+                                <RaisedButton label="Susun Daftar Panjang" primary={true} onClick={this.compile_long_list.bind(this)}/>
+                            </ToolbarGroup>
                         </Toolbar>
                         {columns}
                     </Paper>
+                    {/*<Paper style={this.content_box}>
+                        <DaftarJabatan data={this.state.data_jabatan} selectPosition={this.select_position}/>
+                    </Paper>*/}
                     <Paper style={this.content_box}>
-                    <Toolbar>
-                            <ToolbarTitle text="Jabatan" />
-                    </Toolbar>
+                        <Toolbar>
+                            <ToolbarTitle text="Daftar Panjang" />
+                            <ToolbarGroup>
+                                <RaisedButton label="Simpan Daftar" primary={true} />
+                            </ToolbarGroup>
+                        </Toolbar>
                     </Paper>
                 </div>
                 {dialog}
@@ -295,18 +411,20 @@ class Satker extends Component
 
         this.paper_style =
         {
-            height: 900,
-            width: 600,
+            height: '100em',//900,
+            width: '200em',//600,
             margin: 2,
             textAlign: 'center',
             display: 'inline-block'
         }
     }
 
-    item_checked(event, is_checked)
+    item_checked(data_eselon, event, is_checked)
     {
-        const data_eselon = arguments[0]
-        const key = 'checked' + data_eselon.kdu1 + data_eselon.kdu2 + data_eselon.kdu4 + data_eselon.kdu4 + data_eselon.nama
+        console.log(is_checked)
+        //const data_eselon = arguments[0]
+        const key = 'checked' + data_eselon.kdu1 + data_eselon.kdu2 + data_eselon.kdu3 + data_eselon.kdu4 + data_eselon.nama
+        const kdu = [data_eselon.kdu1, data_eselon.kdu2, data_eselon.kdu3, data_eselon.kdu4]
 
         let checked_items = this.state.checked_items
         //let list_items = []
@@ -316,7 +434,7 @@ class Satker extends Component
         if (is_checked)
         {
             // Fill checked items
-            checked_items.push(<ListItem key={key} primaryText={data_eselon.nama} onClick={this.remove_checked_item.bind(this, key)}/>)
+            checked_items.push(<ListItem key={key} data-kdu={kdu} primaryText={data_eselon.nama} onClick={this.remove_checked_item.bind(this, key)}/>)
 
             // Reduce list items
             //list_items = this.state.list_items.filter(item => {return item.props.primaryText !== data_eselon.nama})
@@ -338,12 +456,21 @@ class Satker extends Component
         }
     }
 
-    remove_checked_item()
+    remove_checked_item(key)
     {
-        const key = arguments[0]
+        //const key = arguments[0]
+        //let checked_items = this.state.checked_items.splice(, 1)
         let checked_items = this.state.checked_items.filter(item => {return item.key !== key})
 
         this.setState({checked_items : checked_items})
+        // TODO : Ensure this remove this.checked_items
+        this.props.any_change(this.props.eselon, /*this.state.*/checked_items)
+        //console.log(this.props.eselon, this.state.checked_items)
+    }
+
+    componentDidUpdate()
+    {
+        //
     }
 
     update_list(event, new_value)
@@ -395,29 +522,12 @@ class Satker extends Component
         this.props.any_change(this.props.eselon, this.state.checked_items)
     }
 
-    componentDidUpdate()
-    {
-        //this.props.any_change(this.props.eselon, this.state.checked_items)
-    }
-
-    /*toggle_list()
-    {
-        if (this.state.is_list_shown && this.state.list_items.length > 0)
-        {
-            this.setState({is_list_shown : false})
-        }
-
-        else if ( ! this.state.is_list_shown)
-        {
-            this.setState({is_list_shown : true})
-        }
-    }*/
-
     render()
     {
+        const eselon = ['I', 'II', 'III', 'IV']
         return (
             <Paper>
-                <TextField hintText={'Tingkat eselon ' + this.props.eselon} style={{overflow:'hidden'}} onChange={this.update_list.bind(this)} />{/*onBlur={this.toggle_list.bind(this)} onFocus={this.toggle_list.bind(this)}*/}
+                <TextField hintText={'Eselon ' + eselon[this.props.eselon - 1]} style={{overflow:'hidden'}} onChange={this.update_list.bind(this)} />{/*onBlur={this.toggle_list.bind(this)} onFocus={this.toggle_list.bind(this)}*/}
                 <DaftarSatker list_items={this.state.list_items} is_list_shown={this.state.is_list_shown} checked_items={this.state.checked_items} />
                 <Snackbar open={this.state.is_snackbar_open} message={this.state.snackbar_text} autoHideDuration={4000}/>
             </Paper>
@@ -450,7 +560,7 @@ class DaftarSatker extends Component
         return (
             <List style={{height : '200em', maxHeight: 200, overflow: 'auto'}}>
                 {/*<Subheader inset={true}></Subheader>*/}
-                <div style={{'background-color' : 'linen'}}>
+                <div style={{'backgroundColor' : 'linen'}}>
                 {this.props.checked_items}
                 </div>
                 {divider}
@@ -462,7 +572,132 @@ class DaftarSatker extends Component
     }
 }
 
-class LoadingDialog extends Component {
+class DaftarJabatan extends Component
+{
+    constructor(props)
+    {
+        super(props)
+
+        this.paper_style =
+        {
+            height: '20em',
+            width: '100%',
+            margin: 2,
+            textAlign: 'center',
+            display: 'inline-block',
+            maxHeight: '100%',//200,
+            overflow: 'auto'
+        }
+
+        this.content_column =
+        {
+            float : 'left',
+            margin : 0,
+            width : '25%',
+            overflow : 'auto'
+        }
+
+        this.column_number = 4
+        this.checklist = new Map()
+    }
+
+    update_checklist(key, data, event, is_checked)
+    {
+        if (is_checked)
+        {
+            this.checklist.set(key, data)
+        }
+
+        else
+        {
+            this.checklist.delete(key)
+        }
+
+        //console.log(this.checklist)
+    }
+
+    insert_into_list(data, index)
+    {
+        const key = 'index' + index + data.nama
+        const item = <ListItem key={key} primaryText={data.nama} leftCheckbox={<Checkbox onCheck={this.update_checklist.bind(this, key, data)}/>} />
+        // this.props.selectPosition
+
+        return item
+    }
+
+    filter_by_echelon(echelon, data)
+    {
+        return data.eselon === echelon
+    }
+
+    async compile_long_list()
+    {
+        try
+        {
+            // TODO : Dari checklist, isi query string ke endpoint ini
+            const long_list = await axios.get(server_url + '/api/daftar_panjang')
+
+            if (long_list.data.status !== 'berhasil')
+            {
+                return []
+            }
+
+            return long_list.data.data
+        }
+
+        catch(err)
+        {
+            //console.log(err.message)
+            console.trace(err)
+            return []
+        }
+    }
+
+    render()
+    {
+        const eselon = ['JPT Madya', 'JPT Pratama', 'Administrator', 'Pengawas']
+        //const position_limit_per_columns = Math.ceil(this.props.data.length / this.column_number)
+
+        let columns = []
+        //let position_per_columns = []
+
+        //position_per_columns[0] = this.props.data.slice(0, position_limit_per_columns)
+        //position_per_columns[1] = this.props.data.slice(position_limit_per_columns, position_limit_per_columns * 2)
+        //position_per_columns[2] = this.props.data.slice(position_limit_per_columns * 2, position_limit_per_columns * 3)
+        //position_per_columns[3] = this.props.data.slice(position_limit_per_columns * 3)
+
+        //const numbers = new Set(this.props.data.map(el => {return el.eselon}))
+        //console.log(numbers)
+
+        for (let a = 0; a < this.column_number; a++)
+        {
+            //const checkboxes = position_per_columns[a].filter(this.filter_by_echelon.bind(null, a + 1)).map(this.insert_into_list)
+            const filtered = this.props.data.filter(this.filter_by_echelon.bind(null, a + 1))
+            const checkboxes = filtered.map(this.insert_into_list.bind(this))
+
+            const column = <div key={'kolom_jabatan_' + a} style={this.content_column}><List><Subheader>{eselon[a]}</Subheader>{checkboxes}</List></div>
+
+            columns.push(column)
+        }
+
+        return (
+            <div>
+                <Toolbar>
+                    <ToolbarTitle text="Jabatan" />
+                    <ToolbarGroup>
+                        <RaisedButton label="Susun Daftar Panjang" primary={true} onClick={this.compile_long_list.bind(this)}/>
+                    </ToolbarGroup>
+                </Toolbar>
+                <Paper style={this.paper_style}>
+                {columns}
+                </Paper>
+            </div>
+        )
+    }
+}
+
+class LoadingDialog extends Component
+{
     /*constructor(props)
     {
         super(props)
@@ -481,6 +716,21 @@ class LoadingDialog extends Component {
 }
 
 class StructureErrorDialog extends Component {
+    constructor(props)
+    {
+        super(props)
+
+        this.state =
+        {
+            is_open : true
+        }
+    }
+
+    close()
+    {
+        this.setState({is_open : false})
+    }
+
     reload()
     {
         window.location.replace(window.location.pathname + window.location.search + window.location.hash);
@@ -491,7 +741,7 @@ class StructureErrorDialog extends Component {
 
         return (
             <div>
-                <Dialog title="Connection Error" actions={actions} modal={true} open={true}>
+                <Dialog title="Connection Error" actions={actions} modal={true} open={this.state.is_open}>
                     Tidak ada jaringan internet. Pastikan ada jaringan terlebih dahulu.
                 </Dialog>
             </div>

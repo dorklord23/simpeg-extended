@@ -10,7 +10,10 @@ function api_endpoints(app, db)
     const callbacks = new Callbacks(db)
 
     app.get(`/api/pegawai`, (req, res) => {callbacks.employee(req, res)})
+    app.get(`/api/pegawai/foto`, (req, res) => {callbacks.avatar(req, res)})
     app.get(`/api/struktur`, (req, res) => {callbacks.structure(req, res)})
+    app.get(`/api/jabatan`, (req, res) => {callbacks.position(req, res)})
+    app.get(`/api/daftar_panjang`, (req, res) => {callbacks.long_list(req, res)})
 
     app.get(`/api/pegawai/ekspor`, (req, res) => {callbacks.employee_export(req, res)})
 }
