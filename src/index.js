@@ -13,4 +13,4 @@ import injectTapEventPlugin from 'react-tap-event-plugin'
 
 injectTapEventPlugin()
 
-ReactDOM.render(<MuiThemeProvider><BOB /></MuiThemeProvider>, document.getElementById('root'));
+ReactDOM.render(<MuiThemeProvider><App /></MuiThemeProvider>, document.getElementById('root'));

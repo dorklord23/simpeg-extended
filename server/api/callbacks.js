@@ -98,21 +98,28 @@ class Callbacks
         try
         {
             req.query = check_params(req, params)
-            const filename = `/var/www/html/bnn-simpeg/_uploads/photo_pegawai/thumbs/${req.query.nip}`
+            let filename = `/var/www/html/bnn-simpeg/_uploads/photo_pegawai/thumbs/${req.query.nip}`
 
             //fs.open(`${filename}.jpg`, 'r', (err, fd) => {
             fs.access(`${filename}.jpg`, (err) => {
                 if (err) {
                     if (err.code === 'ENOENT') {
                         // Customizing error message
-                        err.message = `Tidak menemukan foto profil untuk NIP/NRP ${req.query.nip}`
+                        //err.message = `Tidak menemukan foto profil untuk NIP/NRP ${req.query.nip}`
 
-                        show_error(res, err, 404)
-                        return;
+                        //show_error(res, err, 404)
+
+                        filename = `/var/www/html/bnn-simpeg/_uploads/photo_pegawai/thumbs/no_photo`
+
+                        // Send placeholder image instead of error response
+                        show_result(res, filename, '', 200, 'jpg')
+                        return
                     }
                     //console.error(err)
-                    throw err;
+                    //throw err;
+                    show_error(res, err, 500)
                 }
+
                 else
                 {
                     show_result(res, filename, '', 200, 'jpg')
