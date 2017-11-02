@@ -5,6 +5,7 @@
 
 const xlsx = require('xlsx')
 const fs = require('fs')
+const base64 = require('node-base64-image')
 const moment = require('moment')
 const Pegawai = require('./pegawai')
 
@@ -105,14 +106,25 @@ class Callbacks
                 if (err) {
                     if (err.code === 'ENOENT') {
                         // Customizing error message
-                        //err.message = `Tidak menemukan foto profil untuk NIP/NRP ${req.query.nip}`
+                        err.message = `Tidak menemukan foto profil untuk NIP/NRP ${req.query.nip}`
 
                         //show_error(res, err, 404)
 
                         filename = `/var/www/html/bnn-simpeg/_uploads/photo_pegawai/thumbs/no_photo`
 
                         // Send placeholder image instead of error response
-                        show_result(res, filename, '', 200, 'jpg')
+                        //show_result(res, filename, err.message, 200, 'jpg')
+
+                        base64.encode(`${filename}.jpg`, {string:true, local:true}, (error, response) => {
+                            if (err)
+                            {
+                                show_error(res, err, 500)
+                                return
+                            }
+
+                            show_result(res, response, 'Gagal dalam memperoleh base64 string', 500, 'json')
+                        })
+
                         return
                     }
                     //console.error(err)
@@ -122,7 +134,15 @@ class Callbacks
 
                 else
                 {
-                    show_result(res, filename, '', 200, 'jpg')
+                    base64.encode(`${filename}.jpg`, {string:true, local:true}, (error, response) => {
+                        if (err)
+                        {
+                            show_error(res, err, 500)
+                            return
+                        }
+
+                        show_result(res, response, 'Berhasil dalam memperoleh base64 string')
+                    })
                 }
             })
         }

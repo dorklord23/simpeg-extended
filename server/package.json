@@ -24,6 +24,7 @@
     "irc": "^0.5.2",
     "junction": "^0.2.0",
     "moment": "^2.18.1",
+    "node-base64-image": "^1.0.4",
     "node-stringprep": "^0.8.0",
     "node-xmpp-client": "^3.2.0",
     "nodemailer": "^4.0.1",
