@@ -116,9 +116,9 @@ class Callbacks
                         //show_result(res, filename, err.message, 200, 'jpg')
 
                         base64.encode(`${filename}.jpg`, {string:true, local:true}, (error, response) => {
-                            if (err)
+                            if (error)
                             {
-                                show_error(res, err, 500)
+                                show_error(res, error, 500)
                                 return
                             }
 
