@@ -142,10 +142,13 @@ class Callbacks
                 throw new Error('Tidak ada satker dengan ID dimaksud')
             }
 
-            //const query = `SELECT p.nama FROM m_pegawai p JOIN struktur s ON s.kdu1 = p.kdu1 AND s.kdu2 = p.kdu2 AND s.kdu3 = p.kdu3 AND s.kdu4 = p.kdu4 WHERE s.id = $1`
-            const subquery = type === 'qty' ? 'COUNT(p.nama) qty' : 'p.nip, p.nama'
+            //const subquery = type === 'qty' ? 'COUNT(p.nama) qty' : 'p.nip, p.nama'
+            const subquery = type === 'qty' ? 'COUNT(hj.nama) qty' : 'hj.nip, hj.nama'
 
-            let query = `SELECT ${subquery} FROM m_pegawai p JOIN struktur s ON s.kdu$2 = p.kdu$2 WHERE s.id = $1`
+            //let query = `SELECT ${subquery} FROM m_pegawai p JOIN struktur s ON s.kdu$2 = p.kdu$2 WHERE s.id = $1 AND CASE WHEN $1 = 1 THEN p.kdu2 IN ('01', '02', '03', '04') ELSE TRUE END`
+            const subquery2 = `SELECT DISTINCT ON (p.nip) p.nama, p.nip, j.lok, j.kdu1, j.kdu2, j.kdu3, j.kdu4 FROM m_pegawai p JOIN th_jabatan j ON p.nip = j.nip ORDER BY p.nip ASC, tmt_jabatan DESC` // ORDER BY tmt_jabatan DESC
+
+            let query = `SELECT ${subquery} FROM (${subquery2}) hj JOIN struktur s ON s.kdu$2 = hj.kdu$2 WHERE s.id = $1 AND CASE WHEN $1 = 1 THEN /*hj.kdu2 IN ('01', '02', '03', '04') AND*/ hj.lok = '1' ELSE TRUE END`
 
             if (type === 'list')
             {
@@ -165,7 +168,7 @@ class Callbacks
             let result =
             {
                 satker : echelon[0].nmunit,
-                qty : employees[0].qty
+                qty : parseInt(employees[0].qty)
             }
 
             if (type === 'list')
