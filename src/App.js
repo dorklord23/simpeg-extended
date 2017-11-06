@@ -31,7 +31,7 @@ import axios from 'axios'
 
 const server_url = 'http://localhost:8080'
 
-class App extends Component
+export default class App extends Component
 {
     constructor(props)
     {
@@ -748,8 +748,6 @@ class StructureErrorDialog extends Component {
         )
     }
 }
-
-export default App
 /*<SelectField floatingLabelText={`Eselon ${this.props.eselon}`} value={this.state.value} onChange={this.handleChange}>
                 <MenuItem value={1} primaryText="" />
                 <MenuItem value={2} primaryText="Every Night" />

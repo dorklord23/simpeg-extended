@@ -1,0 +1,3 @@
+Kalo error pas node-gyp rebuild di centos 6
+https://edwards.sdsu.edu/research/c11-on-centos-6/
+scl enable devtoolset-2 bash

@@ -89,6 +89,125 @@ class Callbacks
         this.db = database
     }
 
+    async work_unit_list(req, res)
+    {
+        // NOTE : Penentuan satker dari field "keterangan" di tabel "struktur". Cari yang value-nya "KPA".
+        try
+        {
+            /*const params =
+            {
+                unit_name : {optional : false, default : ''}
+            }
+
+            req.query = check_params(req, params)*/
+
+            const query = `SELECT id, nmunit, e.eselon FROM struktur s JOIN tr_eselon e ON s.eselon = e.kode WHERE keterangan LIKE '%KPA%' ORDER BY e.eselon ASC, nmunit ASC`
+            const units = await this.db.any(query)
+
+            if (units.length === 0)
+            {
+                const error = new Error('Tidak ada data satker yang valid')
+                return show_error(res, error, 404)
+            }
+
+            let result = []
+
+            for (let a = 0; a < units.length; a++)
+            {
+                const unit =
+                {
+                    id : units[a].id,
+                    nama : units[a].nmunit,
+                    eselon : units[a].eselon
+                }
+
+                result.push(unit)
+            }
+
+            show_result(res, result, 'Berhasil menarik daftar satuan kerja')
+        }
+
+        catch(e)
+        {
+            show_error(res, e, 500)
+        }
+    }
+
+    async work_unit_employee(req, res, type)
+    {
+        async function get_employee_qty(echelon)
+        {
+            if (echelon.length === 0)
+            {
+                throw new Error('Tidak ada satker dengan ID dimaksud')
+            }
+
+            //const query = `SELECT p.nama FROM m_pegawai p JOIN struktur s ON s.kdu1 = p.kdu1 AND s.kdu2 = p.kdu2 AND s.kdu3 = p.kdu3 AND s.kdu4 = p.kdu4 WHERE s.id = $1`
+            const subquery = type === 'qty' ? 'COUNT(p.nama) qty' : 'p.nip, p.nama'
+
+            let query = `SELECT ${subquery} FROM m_pegawai p JOIN struktur s ON s.kdu$2 = p.kdu$2 WHERE s.id = $1`
+
+            if (type === 'list')
+            {
+                const limit = 10
+
+                query += ` LIMIT ${limit} OFFSET ${(req.query.page - 1) * limit}`
+            }
+
+            const employees = await this.db.any(query, [req.query.unit_id, echelon[0].tktesel])
+
+            if (employees.length === 0)
+            {
+                throw new Error('Tidak ada pegawai untuk satker dimaksud')
+            }
+
+            // result for qty
+            let result =
+            {
+                satker : echelon[0].nmunit,
+                qty : employees[0].qty
+            }
+
+            if (type === 'list')
+            {
+                result =
+                {
+                    satker : echelon[0].nmunit,
+                    halaman : req.query.page,
+                    pegawai : employees.map(employee => {return {nip : employee.nip, nama : employee.nama}})
+                }
+            }
+
+            return result//type === 'qty' ? qty : list
+        }
+
+        try
+        {
+            let params =
+            {
+                unit_id : {optional : false, default : ''}
+            }
+
+            if (type === 'list')
+            {
+                params.page = {optional : true, default : 1}
+            }
+
+            req.query = check_params(req, params)
+
+            const query = `SELECT e.tktesel, s.nmunit FROM struktur s JOIN tr_eselon e ON s.eselon = e.kode WHERE s.keterangan LIKE '%KPA%' AND s.id = $1`
+
+            const employees = await this.db.any(query, [req.query.unit_id]).then(get_employee_qty.bind(this))
+
+            show_result(res, employees, 'Berhasil menarik daftar pegawai satuan kerja')
+        }
+
+        catch(e)
+        {
+            show_error(res, e, 500)
+        }
+    }
+
     async avatar(req, res)
     {
         const params =
@@ -122,7 +241,7 @@ class Callbacks
                                 return
                             }
 
-                            show_result(res, response, 'Gagal dalam memperoleh base64 string', 500, 'json')
+                            show_result(res, response, 'Gagal memperoleh base64 string', 500, 'json')
                         })
 
                         return
@@ -141,7 +260,7 @@ class Callbacks
                             return
                         }
 
-                        show_result(res, response, 'Berhasil dalam memperoleh base64 string')
+                        show_result(res, response, 'Berhasil memperoleh base64 string')
                     })
                 }
             })

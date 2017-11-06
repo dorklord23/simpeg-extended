@@ -15,6 +15,10 @@ function api_endpoints(app, db)
     app.get(`/api/jabatan`, (req, res) => {callbacks.position(req, res)})
     app.get(`/api/daftar_panjang`, (req, res) => {callbacks.long_list(req, res)})
 
+    app.get(`/api/satker`, (req, res) => {callbacks.work_unit_list(req, res)})
+    app.get(`/api/satker/pegawai/jumlah`, (req, res) => {callbacks.work_unit_employee(req, res, 'qty')})
+    app.get(`/api/satker/pegawai`, (req, res) => {callbacks.work_unit_employee(req, res, 'list')})
+
     app.get(`/api/pegawai/ekspor`, (req, res) => {callbacks.employee_export(req, res)})
 }
 
