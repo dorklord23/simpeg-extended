@@ -7,7 +7,6 @@ var ReactDOM = require('react-dom');
 
 import './index.css';
 import App from './App'
-import BOB from './BOB'
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider'
 import injectTapEventPlugin from 'react-tap-event-plugin'
 

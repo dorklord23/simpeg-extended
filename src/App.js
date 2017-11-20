@@ -175,7 +175,10 @@ export default class App extends Component
             const kdu3 = JSON.stringify(this.checked_items.eselon3.map(item => {return item.props['data-kdu']}))
             const kdu4 = JSON.stringify(this.checked_items.eselon4.map(item => {return item.props['data-kdu']}))
 
-            const long_list = await axios.get(`${server_url}/api/daftar_panjang?kdu1=${kdu1}&kdu2=${kdu2}&kdu3=${kdu3}&kdu4=${kdu4}`)
+            const url = `${server_url}/api/daftar_panjang?kdu1=${kdu1}&kdu2=${kdu2}&kdu3=${kdu3}&kdu4=${kdu4}`
+            const long_list = await axios.get(url)
+            console.log(url)
+            console.log(long_list)
 
             if (long_list.data.status !== 'berhasil')
             {

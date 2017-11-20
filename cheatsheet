@@ -1,3 +1,5 @@
 Kalo error pas node-gyp rebuild di centos 6
 https://edwards.sdsu.edu/research/c11-on-centos-6/
 scl enable devtoolset-2 bash
+
+--SELECT p.nama, d.nama jenjang_didik, g.golongan, g.pangkat, j.jabatan FROM m_pegawai p JOIN tr_pendidikan d ON d.kode = p.tktpdk JOIN tr_jabatan j ON p.jabat = j.kode JOIN tr_golongan g ON g.kode = p.gol WHERE nip = '198101102011012006'

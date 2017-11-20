@@ -89,6 +89,30 @@ class Callbacks
         this.db = database
     }
 
+    async investigator_list(req, res)
+    {
+        try
+        {
+            const params =
+            {
+                page : {optional : true, default : 1}
+            }
+
+            req.query = check_params(req, params)
+
+            const query = `SELECT * FROM (SELECT DISTINCT ON (p.nip) p.nama, p.nip, j.n_jabatan jabatan /*, tmt_jabatan, j.lok, j.kdu1, j.kdu2, j.kdu3, j.kdu4*/ FROM m_pegawai p JOIN th_jabatan j ON p.nip = j.nip ORDER BY p.nip ASC, tmt_jabatan DESC) s WHERE jabatan ILIKE 'penyidik%' LIMIT 10 OFFSET $1`
+
+            const investigators = await this.db.any(query, [(req.query.page - 1) * 10])
+
+            show_result(res, investigators, 'Berhasil menarik daftar penyidik')
+        }
+
+        catch(e)
+        {
+            show_error(res, e, 500)
+        }
+    }
+
     async work_unit_list(req, res)
     {
         // NOTE : Penentuan satker dari field "keterangan" di tabel "struktur". Cari yang value-nya "KPA".
@@ -133,7 +157,7 @@ class Callbacks
         }
     }
 
-    async work_unit_employee(req, res, type)
+    async work_unit_employee(req, res, type, is_investigator = false)
     {
         async function get_employee_qty(echelon)
         {
@@ -146,9 +170,14 @@ class Callbacks
             const subquery = type === 'qty' ? 'COUNT(hj.nama) qty' : 'hj.nip, hj.nama'
 
             //let query = `SELECT ${subquery} FROM m_pegawai p JOIN struktur s ON s.kdu$2 = p.kdu$2 WHERE s.id = $1 AND CASE WHEN $1 = 1 THEN p.kdu2 IN ('01', '02', '03', '04') ELSE TRUE END`
-            const subquery2 = `SELECT DISTINCT ON (p.nip) p.nama, p.nip, j.lok, j.kdu1, j.kdu2, j.kdu3, j.kdu4 FROM m_pegawai p JOIN th_jabatan j ON p.nip = j.nip ORDER BY p.nip ASC, tmt_jabatan DESC` // ORDER BY tmt_jabatan DESC
+            const subquery2 = `SELECT DISTINCT ON (p.nip) p.nama, p.nip, j.n_jabatan, j.lok, j.kdu1, j.kdu2, j.kdu3, j.kdu4 FROM m_pegawai p JOIN th_jabatan j ON p.nip = j.nip ORDER BY p.nip ASC, tmt_jabatan DESC` // ORDER BY tmt_jabatan DESC
 
             let query = `SELECT ${subquery} FROM (${subquery2}) hj JOIN struktur s ON s.kdu$2 = hj.kdu$2 WHERE s.id = $1 AND CASE WHEN $1 = 1 THEN /*hj.kdu2 IN ('01', '02', '03', '04') AND*/ hj.lok = '1' ELSE TRUE END`
+
+            if (is_investigator)
+            {
+                query += ` AND hj.n_jabatan ILIKE 'penyidik%'`
+            }
 
             if (type === 'list')
             {
@@ -256,7 +285,7 @@ class Callbacks
 
                 else
                 {
-                    base64.encode(`${filename}.jpg`, {string:true, local:true}, (error, response) => {
+                    base64.encode(`${filename}.jpg`, {string:true, local:true}, (err, response) => {
                         if (err)
                         {
                             show_error(res, err, 500)
@@ -471,8 +500,8 @@ class Callbacks
            d. pendidikan diutamakan paling rendah Diploma III atau yang sederajat;
            e. memiliki keahlian, pengetahuan, dan pengalaman sesuai bidang tugas untuk jabatan yang akan
               diduduki;
-           f. diutamakan telah mengikuti dan lulus Diklat Kepemimpinan Tingkat IV atau yang dipersamakan;
-           g. diutamakan telah mengikuti Diklat Teknis yang menunjang bidang tugasnya;
+           f. __DIUTAMAKAN__ telah mengikuti dan lulus Diklat Kepemimpinan Tingkat IV atau yang dipersamakan;
+           g. __DIUTAMAKAN__ telah mengikuti Diklat Teknis yang menunjang bidang tugasnya;
            h. tidak pernah dijatuhi hukuman disiplin tingkat sedang atau berat dalam 2 (dua) tahun terakhir;
            i. tidak pernah di pidana dengan pidana penjara berdasarkan putusan pengadilan mempunyai
               kekuatan hukum yang tetap sudah karena melakukan tindak pidana dengan pidana penjara 2 tahun atau lebih; dan
@@ -485,20 +514,35 @@ class Callbacks
             req.query.kdu3 = req.query.kdu3.replace(/&quot;/g, '"')
             req.query.kdu4 = req.query.kdu4.replace(/&quot;/g, '"')
 
-            const queries =
-            {
-                eselon4 :
-                {
-                    pangkat : `SELECT p.nama, p.nip FROM m_pegawai p JOIN tr_statuskepegw s ON p.statpeg = s.kode JOIN th_pangkat pang ON pang.nip = p.nip JOIN tr_golongan g ON pang.gol = g.kode WHERE s.kode IN ('1', '2') AND g.golongan IN ('III-b', 'III-c', 'III-d', 'IV-a', 'IV-b', 'IV-c', 'IV-d', 'IV-e')`,
-                    lama_kerja : ``,
-                    pendidikan : ``,
-                    jabatan : ``,
-                    diklat : ``,
-                    sanksi : ``,
-                    pidana : ``,
-                    SKP : ``
-                }
-            }
+            // http://localhost:8080/api/daftar_panjang?kdu1=[["01","00","000","000"]]&kdu2=[["01","02","000","000"]]&kdu3=[["01","02","002","000"]]&kdu4=[["01","02","002","002"]]
+
+            const kdu1 = JSON.parse(req.query.kdu1)
+            const kdu2 = JSON.parse(req.query.kdu2)
+            const kdu3 = JSON.parse(req.query.kdu3)
+            const kdu4 = JSON.parse(req.query.kdu4)
+
+            const current_year = parseInt(moment().format('YYYY'))
+            const current_month = parseInt(moment().format('MM'))
+
+            // Golongan III-b ke atas
+            const kriteria_pangkat_eselon_4 = `SELECT /*DISTINCT ON (p.nip)*/ p.nip FROM m_pegawai p JOIN tr_statuskepegw s ON p.statpeg = s.kode JOIN th_pangkat pang ON pang.nip = p.nip JOIN tr_golongan g ON pang.gol = g.kode WHERE s.kode IN ('1', '2') AND g.golongan IN ('III-b', 'III-c', 'III-d', 'IV-a', 'IV-b', 'IV-c', 'IV-d', 'IV-e') AND length(p.nip) = 18`
+
+            // Empat tahun (48 bulan) bagi S1/D-IV dan 12 tahun (144 bulan) buat D-III
+            const kriteria_lama_kerja_eselon_4 = `SELECT p.nip/*, rp.nama gelar*/ FROM (${kriteria_pangkat_eselon_4}) p LEFT JOIN th_pendidikan hp ON p.nip = hp.nip JOIN tr_pendidikan rp ON p.tktpdk = rp.kode WHERE rp.nama IN ('DIII', 'DIV', 'S1') AND CASE WHEN rp.nama = 'DIII' THEN (((${current_year} - CAST(substring(p.nip from 9 for 4) AS INTEGER)) * 12) + ${current_month} - CAST(substring(p.nip from 13 for 2) AS INTEGER)) >= 144 ELSE (((${current_year} - CAST(substring(p.nip from 9 for 4) AS INTEGER)) * 12) + ${current_month} - CAST(substring(p.nip from 13 for 2) AS INTEGER)) >= 48 END GROUP BY p.nip, /*rp.nama,*/ hp.thn_lulus ORDER BY hp.thn_lulus DESC`
+
+            // NOTE : pendidikan sudah dirangkap di lama_kerja
+
+            // Pengalaman sesuai dengan jabatan yang kosong (hanya mengambil yang satu satker dengan jabatan dimaksud [tentatif])
+            // TODO : Cari satker dari jabatan2 yg pernah diduduki dan jabatan yg kosong
+            const kriteria_pengalaman_eselon_4 = `SELECT p.nip FROM (${kriteria_lama_kerja_eselon_4}) p JOIN th_jabatan j ON p.nip = j.nip WHERE `
+
+            const kriteria_diklat_eselon_4 = ``
+
+            const kriteria_sanksi_eselon_4 = ``
+
+            const kriteria_pidana_eselon_4 = ``
+
+            const kriteria_skp_eselon_4 = ``
 
             //console.log(req.query)
             show_result(res, [1,2,3])
