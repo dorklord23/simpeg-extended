@@ -37,7 +37,6 @@ let express = require('express'),
 
 // SIMPEG API Initialization
 let api_endpoints = require('./endpoints/api.js')
-let ssl_endpoints = require('./endpoints/ssl.js')
 
 // Webhook initialization for Telegram and LINE (soon)
 let webhook_endpoints = require('./endpoints/webhook.js')
@@ -63,7 +62,6 @@ const db = require('./database/postgresql.js')
 // Path initialization
 api_endpoints(app, db)
 webhook_endpoints(app, db)
-ssl_endpoints(app)
 
 httpServer.listen(port, address)
 console.log(`Running in http://${address}:${port}/`)

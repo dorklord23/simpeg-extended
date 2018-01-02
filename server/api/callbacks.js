@@ -515,7 +515,7 @@ class Callbacks
            b. pangkat/golongan minimal Penata Muda tingkat. I (III/b);
            c. jabatan pelaksana bagi yang berpendidikan S1/D IV paling sedikit memiliki pengalaman kerja
               selama 4 tahun dan bagi yang berpendidikan D III sekurang-kurangnya memiliki pengalaman kerja selama 12 tahun;
-           d. pendidikan diutamakan paling rendah Diploma III atau yang sederajat;
+           d. pendidikan __DIUTAMAKAN__ paling rendah Diploma III atau yang sederajat;
            e. memiliki keahlian, pengetahuan, dan pengalaman sesuai bidang tugas untuk jabatan yang akan
               diduduki;
            f. __DIUTAMAKAN__ telah mengikuti dan lulus Diklat Kepemimpinan Tingkat IV atau yang dipersamakan;
@@ -543,7 +543,7 @@ class Callbacks
             const current_month = parseInt(moment().format('MM'))
 
             // Golongan III-b ke atas
-            const kriteria_pangkat_eselon_4 = `SELECT /*DISTINCT ON (p.nip)*/ p.nip FROM m_pegawai p JOIN tr_statuskepegw s ON p.statpeg = s.kode JOIN th_pangkat pang ON pang.nip = p.nip JOIN tr_golongan g ON pang.gol = g.kode WHERE s.kode IN ('1', '2') AND g.golongan IN ('III-b', 'III-c', 'III-d', 'IV-a', 'IV-b', 'IV-c', 'IV-d', 'IV-e') AND length(p.nip) = 18`
+            const kriteria_pangkat_eselon_4 = `SELECT /*DISTINCT ON (p.nip)*/ p.nip, p.tktpdk FROM m_pegawai p JOIN tr_statuskepegw s ON p.statpeg = s.kode JOIN th_pangkat pang ON pang.nip = p.nip JOIN tr_golongan g ON pang.gol = g.kode WHERE s.kode IN ('1', '2') AND g.golongan IN ('III-b', 'III-c', 'III-d', 'IV-a', 'IV-b', 'IV-c', 'IV-d', 'IV-e') AND length(p.nip) = 18`
 
             // Empat tahun (48 bulan) bagi S1/D-IV dan 12 tahun (144 bulan) buat D-III
             const kriteria_lama_kerja_eselon_4 = `SELECT p.nip/*, rp.nama gelar*/ FROM (${kriteria_pangkat_eselon_4}) p LEFT JOIN th_pendidikan hp ON p.nip = hp.nip JOIN tr_pendidikan rp ON p.tktpdk = rp.kode WHERE rp.nama IN ('DIII', 'DIV', 'S1') AND CASE WHEN rp.nama = 'DIII' THEN (((${current_year} - CAST(substring(p.nip from 9 for 4) AS INTEGER)) * 12) + ${current_month} - CAST(substring(p.nip from 13 for 2) AS INTEGER)) >= 144 ELSE (((${current_year} - CAST(substring(p.nip from 9 for 4) AS INTEGER)) * 12) + ${current_month} - CAST(substring(p.nip from 13 for 2) AS INTEGER)) >= 48 END GROUP BY p.nip, /*rp.nama,*/ hp.thn_lulus ORDER BY hp.thn_lulus DESC`
@@ -552,9 +552,9 @@ class Callbacks
 
             // Pengalaman sesuai dengan jabatan yang kosong (hanya mengambil yang satu satker dengan jabatan dimaksud [tentatif])
             // TODO : Cari satker dari jabatan2 yg pernah diduduki dan jabatan yg kosong
-            const kriteria_pengalaman_eselon_4 = `SELECT p.nip FROM (${kriteria_lama_kerja_eselon_4}) p JOIN th_jabatan j ON p.nip = j.nip WHERE `
+            const kriteria_pengalaman_eselon_4 = `SELECT p.nip, (SELECT nmunit FROM (SELECT 4 esl, keterangan, nmunit FROM struktur WHERE lok = j.lok AND kdu1 = j.kdu1 AND kdu2 = j.kdu2 AND kdu3 = j.kdu3 AND kdu4 = j.kdu4 UNION SELECT 3 esl, keterangan, nmunit FROM struktur WHERE lok = j.lok AND kdu1 = j.kdu1 AND kdu2 = j.kdu2 AND kdu3 = j.kdu3 AND kdu4 = '000' UNION SELECT 2 esl, keterangan, nmunit FROM struktur WHERE lok = j.lok AND kdu1 = j.kdu1 AND kdu2 = j.kdu2 AND kdu3 = '000' AND kdu4 = '000' UNION SELECT 1 esl, keterangan, nmunit FROM struktur WHERE lok = j.lok AND kdu1 = j.kdu1 AND kdu2 = '00' AND kdu3 = '000' AND kdu4 = '000') a WHERE keterangan LIKE '%KPA%' ORDER BY esl DESC LIMIT 1) nama_satker/*, j.lok, j.kdu1, j.kdu2, j.kdu3, j.kdu4, tmt_jabatan*/ FROM (${kriteria_lama_kerja_eselon_4}) p JOIN th_jabatan j ON p.nip = j.nip JOIN struktur s ON s.lok = j.lok AND s.kdu1 = j.kdu1 AND s.kdu2 = j.kdu2 AND s.kdu3 = j.kdu3 AND s.kdu4 = j.kdu4 /*WHERE p.nip = '198107201999121001'*/ GROUP BY p.nip, j.lok, j.kdu1, j.kdu2, j.kdu3, j.kdu4, tmt_jabatan, j.nmunit ORDER BY p.nip, tmt_jabatan DESC`
 
-            const kriteria_diklat_eselon_4 = ``
+            const kriteria_diklat_eselon_4 = `SELECT p.nip FROM th_diklat_penjenjangan d JOIN (${kriteria_pengalaman_eselon_4}) p ON d.nip = p.nip WHERE nama_diklat = 'Diklat Pim Tingkat IV'`
 
             const kriteria_sanksi_eselon_4 = ``
 
