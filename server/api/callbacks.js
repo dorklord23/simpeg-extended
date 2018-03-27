@@ -100,7 +100,9 @@ class Callbacks
 
             req.query = check_params(req, params)
 
-            const query = `SELECT * FROM (SELECT DISTINCT ON (p.nip) p.nama, p.nip, j.n_jabatan jabatan /*, tmt_jabatan, j.lok, j.kdu1, j.kdu2, j.kdu3, j.kdu4*/ FROM m_pegawai p JOIN th_jabatan j ON p.nip = j.nip ORDER BY p.nip ASC, tmt_jabatan DESC) s WHERE jabatan ILIKE 'penyidik%' LIMIT 10 OFFSET $1`
+            const use_page = req.query.page === 'all' ? '' : `LIMIT 10 OFFSET $1`
+
+            const query = `SELECT * FROM (SELECT DISTINCT ON (p.nip) p.nama, p.nip, j.n_jabatan jabatan /*, tmt_jabatan, j.lok, j.kdu1, j.kdu2, j.kdu3, j.kdu4*/ FROM m_pegawai p JOIN th_jabatan j ON p.nip = j.nip ORDER BY p.nip ASC, tmt_jabatan DESC) s WHERE jabatan ILIKE 'penyidik%' ${use_page}`
 
             const investigators = await this.db.any(query, [(req.query.page - 1) * 10])
 
@@ -181,9 +183,14 @@ class Callbacks
 
             if (type === 'list')
             {
-                const limit = 10
+                if (req.query.page === 'all') {
+                    query += ' '
+                }
 
-                query += ` LIMIT ${limit} OFFSET ${(req.query.page - 1) * limit}`
+                else {
+                    const limit = 10
+                    query += ` LIMIT ${limit} OFFSET ${(req.query.page - 1) * limit}`
+                }
             }
 
             const employees = await this.db.any(query, [req.query.unit_id, echelon[0].tktesel])
@@ -193,7 +200,7 @@ class Callbacks
                 throw new Error('Tidak ada pegawai untuk satker dimaksud')
             }
 
-            // result for qty
+            // result for type === qty
             let result =
             {
                 satker : echelon[0].nmunit,
@@ -521,7 +528,7 @@ class Callbacks
            f. __DIUTAMAKAN__ telah mengikuti dan lulus Diklat Kepemimpinan Tingkat IV atau yang dipersamakan;
            g. __DIUTAMAKAN__ telah mengikuti Diklat Teknis yang menunjang bidang tugasnya;
            h. tidak pernah dijatuhi hukuman disiplin tingkat sedang atau berat dalam 2 (dua) tahun terakhir;
-           i. tidak pernah di pidana dengan pidana penjara berdasarkan putusan pengadilan mempunyai
+           i. tidak pernah dipidana dengan pidana penjara berdasarkan putusan pengadilan mempunyai
               kekuatan hukum yang tetap sudah karena melakukan tindak pidana dengan pidana penjara 2 tahun atau lebih; dan
            j. memiliki penilaian kinerja dengan nilai baik.*/
 
@@ -554,10 +561,13 @@ class Callbacks
             // TODO : Cari satker dari jabatan2 yg pernah diduduki dan jabatan yg kosong
             const kriteria_pengalaman_eselon_4 = `SELECT p.nip, (SELECT nmunit FROM (SELECT 4 esl, keterangan, nmunit FROM struktur WHERE lok = j.lok AND kdu1 = j.kdu1 AND kdu2 = j.kdu2 AND kdu3 = j.kdu3 AND kdu4 = j.kdu4 UNION SELECT 3 esl, keterangan, nmunit FROM struktur WHERE lok = j.lok AND kdu1 = j.kdu1 AND kdu2 = j.kdu2 AND kdu3 = j.kdu3 AND kdu4 = '000' UNION SELECT 2 esl, keterangan, nmunit FROM struktur WHERE lok = j.lok AND kdu1 = j.kdu1 AND kdu2 = j.kdu2 AND kdu3 = '000' AND kdu4 = '000' UNION SELECT 1 esl, keterangan, nmunit FROM struktur WHERE lok = j.lok AND kdu1 = j.kdu1 AND kdu2 = '00' AND kdu3 = '000' AND kdu4 = '000') a WHERE keterangan LIKE '%KPA%' ORDER BY esl DESC LIMIT 1) nama_satker/*, j.lok, j.kdu1, j.kdu2, j.kdu3, j.kdu4, tmt_jabatan*/ FROM (${kriteria_lama_kerja_eselon_4}) p JOIN th_jabatan j ON p.nip = j.nip JOIN struktur s ON s.lok = j.lok AND s.kdu1 = j.kdu1 AND s.kdu2 = j.kdu2 AND s.kdu3 = j.kdu3 AND s.kdu4 = j.kdu4 /*WHERE p.nip = '198107201999121001'*/ GROUP BY p.nip, j.lok, j.kdu1, j.kdu2, j.kdu3, j.kdu4, tmt_jabatan, j.nmunit ORDER BY p.nip, tmt_jabatan DESC`
 
-            const kriteria_diklat_eselon_4 = `SELECT p.nip FROM th_diklat_penjenjangan d JOIN (${kriteria_pengalaman_eselon_4}) p ON d.nip = p.nip WHERE nama_diklat = 'Diklat Pim Tingkat IV'`
+            // Diklat Kepemimpinan dan Diklat Teknis
+            const kriteria_diklat_eselon_4 = `SELECT p.nip FROM th_diklat_penjenjangan pim JOIN (${kriteria_pengalaman_eselon_4}) p ON pim.nip = p.nip JOIN th_diklat_teknis t ON p.nip = t.nip WHERE pim.nama_diklat = 'Diklat Pim Tingkat IV'`
 
-            const kriteria_sanksi_eselon_4 = ``
+            const kriteria_sanksi_eselon_4 = `SELECT p.nip, tingkat FROM (${kriteria_diklat_eselon_4}) p LEFT JOIN th_sanksi s ON p.nip = s.nip LEFT JOIN sys_tingkat_hkmn_disiplin t ON s.tkt_hkmn = t.kode LEFT JOIN (SELECT p.nip FROM (${kriteria_diklat_eselon_4}) p LEFT JOIN th_sanksi s ON p.nip = s.nip LEFT JOIN sys_tingkat_hkmn_disiplin t ON s.tkt_hkmn = t.kode WHERE t.tingkat IN ('Sedang', 'Berat') AND s.tmt_hkmn >= (current_date - interval '2 years') AND s.tmt_hkmn <= current_date) pp ON p.nip <> pp.nip WHERE t.tingkat IS NULL OR t.tingkat = 'Ringan'`
+            /*`SELECT p.nip, tingkat FROM (${kriteria_diklat_eselon_4}) p LEFT JOIN th_sanksi s ON p.nip = s.nip LEFT JOIN sys_tingkat_hkmn_disiplin t ON s.tkt_hkmn = t.kode WHERE t.tingkat IS NULL OR (t.tingkat NOT IN ('Sedang', 'Berat') AND s.tmt_hkmn >= (current_date - interval '2 years') AND s.tmt_hkmn <= current_date)`*/
 
+            // NOTE : Buat riwayat pidana, dibuktikan secara fisik melalui SKCK saja
             const kriteria_pidana_eselon_4 = ``
 
             const kriteria_skp_eselon_4 = ``
