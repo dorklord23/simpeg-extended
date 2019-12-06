@@ -9,28 +9,24 @@ const base64 = require('node-base64-image')
 const moment = require('moment')
 const Pegawai = require('./pegawai')
 
-function show_error(res, error, status_code = 400)
-{
+function show_error(res, error, status_code = 400) {
     console.log(error.stack)
 
     const result =
     {
-        status : 'gagal',
-        code : status_code,
-        comment : error.message
+        status: 'gagal',
+        code: status_code,
+        comment: error.message
     }
 
     res.status(status_code).json(result)
 }
 
-function check_params(req, params, type = 'query')
-{
+function check_params(req, params, type = 'query') {
     let compulsory_params = []
 
-    for (let key in params)
-    {
-        if ( ! params[key].optional)
-        {
+    for (let key in params) {
+        if (!params[key].optional) {
             compulsory_params.push(key)
         }
     }
@@ -38,18 +34,14 @@ function check_params(req, params, type = 'query')
     const submitted_params = Object.keys(req[type])
     const acceptable_params = Object.keys(params)
 
-    for (let a = 0; a < compulsory_params.length; a++)
-    {
-        if ( ! submitted_params.includes(compulsory_params[a]))
-        {
+    for (let a = 0; a < compulsory_params.length; a++) {
+        if (!submitted_params.includes(compulsory_params[a])) {
             throw new Error(`Tidak ada parameter ${compulsory_params[a]}`)
         }
     }
 
-    for (let a = 0; a < acceptable_params.length; a++)
-    {
-        if (typeof req[type][acceptable_params[a]] === 'undefined' && params[acceptable_params[a]].optional)
-        {
+    for (let a = 0; a < acceptable_params.length; a++) {
+        if (typeof req[type][acceptable_params[a]] === 'undefined' && params[acceptable_params[a]].optional) {
             req[type][acceptable_params[a]] = params[acceptable_params[a]].default
         }
     }
@@ -57,17 +49,15 @@ function check_params(req, params, type = 'query')
     return req[type]
 }
 
-function show_result(res, result, comment = '', status_code = 200, format = 'json')
-{
-    switch(format)
-    {
+function show_result(res, result, comment = '', status_code = 200, format = 'json') {
+    switch (format) {
         case 'json':
             const result_ =
             {
-                status : 'berhasil',
-                code : status_code,
-                comment : comment,
-                data : result
+                status: 'berhasil',
+                code: status_code,
+                comment: comment,
+                data: result
             }
 
             res.status(status_code).json(result_)
@@ -82,20 +72,16 @@ function show_result(res, result, comment = '', status_code = 200, format = 'jso
     }
 }
 
-class Callbacks
-{
-    constructor(database)
-    {
+class Callbacks {
+    constructor(database) {
         this.db = database
     }
 
-    async investigator_list(req, res)
-    {
-        try
-        {
+    async investigator_list(req, res) {
+        try {
             const params =
             {
-                page : {optional : true, default : 1}
+                page: { optional: true, default: 1 }
             }
 
             req.query = check_params(req, params)
@@ -109,17 +95,14 @@ class Callbacks
             show_result(res, investigators, 'Berhasil menarik daftar penyidik')
         }
 
-        catch(e)
-        {
+        catch (e) {
             show_error(res, e, 500)
         }
     }
 
-    async work_unit_list(req, res)
-    {
+    async work_unit_list(req, res) {
         // NOTE : Penentuan satker dari field "keterangan" di tabel "struktur". Cari yang value-nya "KPA".
-        try
-        {
+        try {
             /*const params =
             {
                 unit_name : {optional : false, default : ''}
@@ -130,21 +113,19 @@ class Callbacks
             const query = `SELECT id, nmunit, e.eselon FROM struktur s JOIN tr_eselon e ON s.eselon = e.kode WHERE keterangan LIKE '%KPA%' ORDER BY e.eselon ASC, nmunit ASC`
             const units = await this.db.any(query)
 
-            if (units.length === 0)
-            {
+            if (units.length === 0) {
                 const error = new Error('Tidak ada data satker yang valid')
                 return show_error(res, error, 404)
             }
 
             let result = []
 
-            for (let a = 0; a < units.length; a++)
-            {
+            for (let a = 0; a < units.length; a++) {
                 const unit =
                 {
-                    id : units[a].id,
-                    nama : units[a].nmunit,
-                    eselon : units[a].eselon
+                    id: units[a].id,
+                    nama: units[a].nmunit,
+                    eselon: units[a].eselon
                 }
 
                 result.push(unit)
@@ -153,18 +134,14 @@ class Callbacks
             show_result(res, result, 'Berhasil menarik daftar satuan kerja')
         }
 
-        catch(e)
-        {
+        catch (e) {
             show_error(res, e, 500)
         }
     }
 
-    async work_unit_employee(req, res, type, is_investigator = false)
-    {
-        async function get_employee_qty(echelon)
-        {
-            if (echelon.length === 0)
-            {
+    async work_unit_employee(req, res, type, is_investigator = false) {
+        async function get_employee_qty(echelon) {
+            if (echelon.length === 0) {
                 throw new Error('Tidak ada satker dengan ID dimaksud')
             }
 
@@ -176,13 +153,11 @@ class Callbacks
 
             let query = `SELECT ${subquery} FROM (${subquery2}) hj JOIN struktur s ON s.kdu$2 = hj.kdu$2 WHERE s.id = $1 AND CASE WHEN $1 = 1 THEN /*hj.kdu2 IN ('01', '02', '03', '04') AND*/ hj.lok = '1' ELSE TRUE END`
 
-            if (is_investigator)
-            {
+            if (is_investigator) {
                 query += ` AND hj.n_jabatan ILIKE 'penyidik%'`
             }
 
-            if (type === 'list')
-            {
+            if (type === 'list') {
                 if (req.query.page === 'all') {
                     query += ' '
                 }
@@ -195,41 +170,37 @@ class Callbacks
 
             const employees = await this.db.any(query, [req.query.unit_id, echelon[0].tktesel])
 
-            if (employees.length === 0)
-            {
+            if (employees.length === 0) {
                 throw new Error('Tidak ada pegawai untuk satker dimaksud')
             }
 
             // result for type === qty
             let result =
             {
-                satker : echelon[0].nmunit,
-                qty : parseInt(employees[0].qty)
+                satker: echelon[0].nmunit,
+                qty: parseInt(employees[0].qty)
             }
 
-            if (type === 'list')
-            {
+            if (type === 'list') {
                 result =
-                {
-                    satker : echelon[0].nmunit,
-                    halaman : req.query.page,
-                    pegawai : employees.map(employee => {return {nip : employee.nip, nama : employee.nama}})
-                }
+                    {
+                        satker: echelon[0].nmunit,
+                        halaman: req.query.page,
+                        pegawai: employees.map(employee => { return { nip: employee.nip, nama: employee.nama } })
+                    }
             }
 
             return result//type === 'qty' ? qty : list
         }
 
-        try
-        {
+        try {
             let params =
             {
-                unit_id : {optional : false, default : ''}
+                unit_id: { optional: false, default: '' }
             }
 
-            if (type === 'list')
-            {
-                params.page = {optional : true, default : 1}
+            if (type === 'list') {
+                params.page = { optional: true, default: 1 }
             }
 
             req.query = check_params(req, params)
@@ -241,21 +212,18 @@ class Callbacks
             show_result(res, employees, 'Berhasil menarik daftar pegawai satuan kerja')
         }
 
-        catch(e)
-        {
+        catch (e) {
             show_error(res, e, 500)
         }
     }
 
-    async avatar(req, res)
-    {
+    async avatar(req, res) {
         const params =
         {
-            nip : {optional : false, default : ''}
+            nip: { optional: false, default: '' }
         }
 
-        try
-        {
+        try {
             req.query = check_params(req, params)
             let filename = `/var/www/html/bnn-simpeg/_uploads/photo_pegawai/thumbs/${req.query.nip}`
 
@@ -273,9 +241,8 @@ class Callbacks
                         // Send placeholder image instead of error response
                         //show_result(res, filename, err.message, 200, 'jpg')
 
-                        base64.encode(`${filename}.jpg`, {string:true, local:true}, (error, response) => {
-                            if (error)
-                            {
+                        base64.encode(`${filename}.jpg`, { string: true, local: true }, (error, response) => {
+                            if (error) {
                                 show_error(res, error, 500)
                                 return
                             }
@@ -290,11 +257,9 @@ class Callbacks
                     show_error(res, err, 500)
                 }
 
-                else
-                {
-                    base64.encode(`${filename}.jpg`, {string:true, local:true}, (err, response) => {
-                        if (err)
-                        {
+                else {
+                    base64.encode(`${filename}.jpg`, { string: true, local: true }, (err, response) => {
+                        if (err) {
                             show_error(res, err, 500)
                             return
                         }
@@ -305,45 +270,41 @@ class Callbacks
             })
         }
 
-        catch(e)
-        {
+        catch (e) {
             show_error(res, e, 500)
         }
     }
 
     // Retrieving employees' data for SOA-based SIN
-    async employee(req, res)
-    {
+    async employee(req, res) {
         const params =
         {
-            nip : {optional : false, default : ''},
-            unit : {optional : true, default : 0},
+            nip: { optional: false, default: '' },
+            unit: { optional: true, default: 0 },
             //baris : {optional : true, default : 10}
         }
 
-        try
-        {
+        try {
             req.query = check_params(req, params)
             let result = {}
             let comment = 'Berhasil menarik data pegawai'
 
             // For debugging purpose
-            if (req.query.nip === 'x')
-            {
+            if (req.query.nip === 'x') {
                 result =
-                {
-                    pangkat : 'pangkat',
-                    gelar_depan : 'gelar_depan',
-                    nama : 'nama',
-                    gelar_belakang : 'gelar_belakang',
-                    jabatan : 'jabatan',
-                    golongan : 'golongan',
-                    eselon : 'eselon',
-                    eselon_1 : 'eselon_1',
-                    eselon_2 : 'eselon_2',
-                    eselon_3 : 'eselon_3',
-                    eselon_4 : 'eselon_4'
-                }
+                    {
+                        pangkat: 'pangkat',
+                        gelar_depan: 'gelar_depan',
+                        nama: 'nama',
+                        gelar_belakang: 'gelar_belakang',
+                        jabatan: 'jabatan',
+                        golongan: 'golongan',
+                        eselon: 'eselon',
+                        eselon_1: 'eselon_1',
+                        eselon_2: 'eselon_2',
+                        eselon_3: 'eselon_3',
+                        eselon_4: 'eselon_4'
+                    }
 
                 return show_result(res, result)
             }
@@ -354,21 +315,18 @@ class Callbacks
 
             let query = "SELECT pangkat, gelar_depan, nama, gelar_blkg, jabatan, golongan, es.eselon, (SELECT nmunit FROM struktur s WHERE s.kdu1 = j.kdu1 AND s.kdu2 = '00' AND s.kdu3 = '000' AND s.kdu4 = '000' AND s.lok = p.lok LIMIT 1) eselon_1, (SELECT nmunit FROM struktur s WHERE s.kdu1 = j.kdu1 AND s.kdu2 = j.kdu2 AND s.kdu3 = '000' AND s.kdu4 = '000' AND s.lok = p.lok LIMIT 1) eselon_2, (SELECT nmunit FROM struktur s WHERE s.kdu1 = j.kdu1 AND s.kdu2 = j.kdu2 AND s.kdu3 = j.kdu3 AND s.kdu4 = '000' AND s.lok = p.lok LIMIT 1) eselon_3, (SELECT nmunit FROM struktur s WHERE s.kdu1 = j.kdu1 AND s.kdu2 = j.kdu2 AND s.kdu3 = j.kdu3 AND s.kdu4 = j.kdu4 AND s.lok = p.lok LIMIT 1) eselon_4 FROM th_jabatan j JOIN m_pegawai p ON j.nip = p.nip JOIN th_pangkat pang ON p.nip = pang.nip JOIN tr_golongan gol ON pang.gol = gol.kode JOIN tr_jabatan jab ON k_jabatan = jab.kode JOIN tr_eselon es ON j.eselon = es.kode WHERE p.nip = $1 ORDER BY tmt_jabatan DESC, tmtesel DESC, pang.tmt_gol DESC LIMIT 1"
 
-            if (req.query.unit === 1)
-            {
+            if (req.query.unit === 1) {
                 query = `SELECT gelar_depan, nama, gelar_blkg, (SELECT '{"id":"' || id || '","nama":"' || nmunit || '"}' FROM (SELECT id, nmunit, keterangan FROM struktur s WHERE s.kdu1 = j.kdu1 AND s.kdu2 = '00' AND s.kdu3 = '000' AND s.kdu4 = '000' AND s.lok = p.lok UNION SELECT id, nmunit, keterangan FROM struktur s WHERE s.kdu1 = j.kdu1 AND s.kdu2 = j.kdu2 AND s.kdu3 = '000' AND s.kdu4 = '000' AND s.lok = p.lok UNION SELECT id, nmunit, keterangan FROM struktur s WHERE s.kdu1 = j.kdu1 AND s.kdu2 = j.kdu2 AND s.kdu3 = j.kdu3 AND s.kdu4 = '000' AND s.lok = p.lok UNION SELECT id, nmunit, keterangan FROM struktur s WHERE s.kdu1 = j.kdu1 AND s.kdu2 = j.kdu2 AND s.kdu3 = j.kdu3 AND s.kdu4 = j.kdu4 AND s.lok = p.lok) satker WHERE keterangan LIKE '%KPA%' LIMIT 1)::JSON satker FROM th_jabatan j JOIN m_pegawai p ON j.nip = p.nip JOIN th_pangkat pang ON p.nip = pang.nip JOIN tr_golongan gol ON pang.gol = gol.kode JOIN tr_jabatan jab ON k_jabatan = jab.kode JOIN tr_eselon es ON j.eselon = es.kode WHERE p.nip = $1 ORDER BY tmt_jabatan DESC, tmtesel DESC, pang.tmt_gol DESC LIMIT 1`
             }
 
             const users = await this.db.any(query, [req.query.nip])
 
-            if (users.length === 0)
-            {
+            if (users.length === 0) {
                 const error = new Error(`Tidak ada pegawai dengan NIP/NRP ${req.query.nip}`)
                 return show_error(res, error, 404)
             }
 
-            if (users.length > 1)
-            {
+            if (users.length > 1) {
                 comment = `Ada duplikasi data pegawai dengan NIP/NRP ${req.query.nip}`
             }
             /*for (let a = 0; a < users.length; a++)
@@ -379,56 +337,50 @@ class Callbacks
 
             //result.nama = users[0].nama
             result =
-            {
-                pangkat : typeof users[0].pangkat === 'undefined' ? 'kosong' : users[0].pangkat,
-                gelar_depan : typeof users[0].gelar_depan === 'undefined' ? 'kosong' : users[0].gelar_depan,
-                nama : typeof users[0].nama === 'undefined' ? '' : users[0].nama,
-                gelar_belakang : typeof users[0].gelar_blkg === 'undefined' ? 'kosong' : users[0].gelar_blkg,
-                jabatan : typeof users[0].jabatan === 'undefined' ? 'kosong' : users[0].jabatan,
-                golongan : typeof users[0].golongan === 'undefined' ? 'kosong' : users[0].golongan,
-                eselon : typeof users[0].eselon === 'undefined' ? 'kosong' : users[0].eselon,
-                eselon_1 : typeof users[0].eselon_1 === 'undefined' ? 'kosong' : users[0].eselon_1,
-                eselon_2 : typeof users[0].eselon_2 === 'undefined' ? 'kosong' : users[0].eselon_2,
-                eselon_3 : typeof users[0].eselon_3 === 'undefined' ? 'kosong' : users[0].eselon_3,
-                eselon_4 : typeof users[0].eselon_4 === 'undefined' ? 'kosong' : users[0].eselon_4
-            }
+                {
+                    pangkat: typeof users[0].pangkat === 'undefined' ? 'kosong' : users[0].pangkat,
+                    gelar_depan: typeof users[0].gelar_depan === 'undefined' ? 'kosong' : users[0].gelar_depan,
+                    nama: typeof users[0].nama === 'undefined' ? '' : users[0].nama,
+                    gelar_belakang: typeof users[0].gelar_blkg === 'undefined' ? 'kosong' : users[0].gelar_blkg,
+                    jabatan: typeof users[0].jabatan === 'undefined' ? 'kosong' : users[0].jabatan,
+                    golongan: typeof users[0].golongan === 'undefined' ? 'kosong' : users[0].golongan,
+                    eselon: typeof users[0].eselon === 'undefined' ? 'kosong' : users[0].eselon,
+                    eselon_1: typeof users[0].eselon_1 === 'undefined' ? 'kosong' : users[0].eselon_1,
+                    eselon_2: typeof users[0].eselon_2 === 'undefined' ? 'kosong' : users[0].eselon_2,
+                    eselon_3: typeof users[0].eselon_3 === 'undefined' ? 'kosong' : users[0].eselon_3,
+                    eselon_4: typeof users[0].eselon_4 === 'undefined' ? 'kosong' : users[0].eselon_4
+                }
 
-            if (req.query.unit === 1)
-            {
+            if (req.query.unit === 1) {
                 console.log(users)
                 result =
-                {
-                    gelar_depan : typeof users[0].gelar_depan === 'undefined' ? 'kosong' : users[0].gelar_depan,
-                    nama : typeof users[0].nama === 'undefined' ? '' : users[0].nama,
-                    gelar_belakang : typeof users[0].gelar_blkg === 'undefined' ? 'kosong' : users[0].gelar_blkg,
-                    id_satker : typeof users[0].satker.id === 'undefined' ? 'kosong' : parseInt(users[0].satker.id),
-                    nama_satker : typeof users[0].satker.nama === 'undefined' ? 'kosong' : users[0].satker.nama
-                }
+                    {
+                        gelar_depan: typeof users[0].gelar_depan === 'undefined' ? 'kosong' : users[0].gelar_depan,
+                        nama: typeof users[0].nama === 'undefined' ? '' : users[0].nama,
+                        gelar_belakang: typeof users[0].gelar_blkg === 'undefined' ? 'kosong' : users[0].gelar_blkg,
+                        id_satker: typeof users[0].satker.id === 'undefined' ? 'kosong' : parseInt(users[0].satker.id),
+                        nama_satker: typeof users[0].satker.nama === 'undefined' ? 'kosong' : users[0].satker.nama
+                    }
             }
 
-            for (let key in result)
-            {
-                if (result.hasOwnProperty(key) && result[key] === '')
-                {
+            for (let key in result) {
+                if (result.hasOwnProperty(key) && result[key] === '') {
                     result[key] = 'kosong'
                 }
             }
 
-            console.dir(result)
+            console.dir('LOG', result)
 
             show_result(res, result, comment)
         }
 
-        catch(e)
-        {
+        catch (e) {
             show_error(res, e, 500)
         }
     }
 
-    async structure(req, res)
-    {
-        try
-        {
+    async structure(req, res) {
+        try {
             /*const subquery_1 = "SELECT nmunit nama, 1 eselon, kdu1, kdu2, kdu3, kdu4 FROM struktur s WHERE kdu1 <> '00' AND kdu2 = '00' AND kdu3 = '000' AND kdu4 = '000'"
             const subquery_2 = "SELECT nmunit nama, 2 eselon, kdu1, kdu2, kdu3, kdu4 FROM struktur s WHERE kdu1 <> '00' AND kdu2 <> '00' AND kdu3 = '000' AND kdu4 = '000'"
             const subquery_3 = "SELECT nmunit nama, 3 eselon, kdu1, kdu2, kdu3, kdu4 FROM struktur s WHERE kdu1 <> '00' AND kdu2 <> '00' AND kdu3 <> '000' AND kdu4 = '000'"
@@ -447,24 +399,21 @@ class Callbacks
             show_result(res, structure)
         }
 
-        catch(err)
-        {
+        catch (err) {
             show_error(res, err, 500)
         }
     }
 
-    async position(req, res)
-    {
+    async position(req, res) {
         const params =
         {
-            kdu1 : {optional : false, default : '[]'},
-            kdu2 : {optional : true, default : '[]'},
-            kdu3 : {optional : true, default : '[]'},
-            kdu4 : {optional : true, default : '[]'}
+            kdu1: { optional: false, default: '[]' },
+            kdu2: { optional: true, default: '[]' },
+            kdu3: { optional: true, default: '[]' },
+            kdu4: { optional: true, default: '[]' }
         }
 
-        try
-        {
+        try {
             req.query = check_params(req, params)
 
             // %5B tri %2C joko %2C debora %5D
@@ -504,14 +453,12 @@ class Callbacks
             show_result(res, position)
         }
 
-        catch(err)
-        {
+        catch (err) {
             show_error(res, err, 500)
         }
     }
 
-    async long_list(req, res)
-    {
+    async long_list(req, res) {
         // Hanya support PNS sementara ini
         // Mesti memenuhi kualifikasi umum sesuai dgn ketentuan peraturan perundang2an dan
         // kualifikasi khusus yang menjadi patokan dalam penyusunan daftar panjang ini sbb:
@@ -532,8 +479,7 @@ class Callbacks
               kekuatan hukum yang tetap sudah karena melakukan tindak pidana dengan pidana penjara 2 tahun atau lebih; dan
            j. memiliki penilaian kinerja dengan nilai baik.*/
 
-        try
-        {
+        try {
             req.query.kdu1 = req.query.kdu1.replace(/&quot;/g, '"')
             req.query.kdu2 = req.query.kdu2.replace(/&quot;/g, '"')
             req.query.kdu3 = req.query.kdu3.replace(/&quot;/g, '"')
@@ -573,27 +519,24 @@ class Callbacks
             const kriteria_skp_eselon_4 = ``
 
             //console.log(req.query)
-            show_result(res, [1,2,3])
+            show_result(res, [1, 2, 3])
         }
 
-        catch(err)
-        {
+        catch (err) {
             show_error(res, err, 500)
         }
     }
 
     // Retrieving employees' data in a particular file format, e.g. MS Excel, for BKN's SAPK
-    async employee_export(req, res)
-    {
-        try
-        {
+    async employee_export(req, res) {
+        try {
             const workbook =
             {
-                SheetNames:['Data'], Sheets:{}
+                SheetNames: ['Data'], Sheets: {}
             }
 
             const headers = [
-                [ "S", "h", "e", "e", "t", "J", "S" ]
+                ["S", "h", "e", "e", "t", "J", "S"]
             ]
 
             // NIP : 19901123 201502 1 003
@@ -604,30 +547,27 @@ class Callbacks
 
             // Eligible employees for each round
             const rounds =
-            [
-                // Round 1
-                {
-                    eligible_months : ['10', '11', '12', '01', '02', '03'],
-                    patterns : []
-                },
-
-                // Round 2
-                {
-                    eligible_months : ['04', '05', '06', '07', '08', '09'],
-                    patterns : []
-                }
-            ]
-
-            function generate_patterns(round)
-            {
-                for (let a = 0; a < rounds[round].eligible_months; a++)
-                {
-                    if (a > 2 || round === 1)
+                [
+                    // Round 1
                     {
+                        eligible_months: ['10', '11', '12', '01', '02', '03'],
+                        patterns: []
+                    },
+
+                    // Round 2
+                    {
+                        eligible_months: ['04', '05', '06', '07', '08', '09'],
+                        patterns: []
+                    }
+                ]
+
+            function generate_patterns(round) {
+                for (let a = 0; a < rounds[round].eligible_months; a++) {
+                    if (a > 2 || round === 1) {
                         years_gone_by = 4
                     }
 
-                    rounds[round].patterns.push('________' + (current_year- years_gone_by) + rounds[round].eligible_months[a] + '____')
+                    rounds[round].patterns.push('________' + (current_year - years_gone_by) + rounds[round].eligible_months[a] + '____')
                 }
 
                 // nip LIKE '' OR nip LIKE ''
@@ -638,7 +578,7 @@ class Callbacks
 
             const query = 'SELECT nip, nama FROM m_pegawai WHERE nip '
 
-            let contents = [  1,  2 ,  3 ,  4 ,  5 ]
+            let contents = [1, 2, 3, 4, 5]
             headers.push(contents)
 
             let worksheet = xlsx.utils.aoa_to_sheet(headers)
@@ -651,8 +591,7 @@ class Callbacks
             show_result(res, filename, '', 200, 'xlsx')
         }
 
-        catch(err)
-        {
+        catch (err) {
             show_error(res, err)
         }
     }
