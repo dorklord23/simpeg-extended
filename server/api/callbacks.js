@@ -358,12 +358,14 @@ class Callbacks {
                     noSatkerInfo = 'Tidak ada data satker';
                 }
 
+                const satkerId = typeof users[0].satker.id === 'undefined' ? 'kosong' : parseInt(users[0].satker.id;
+
                 result =
                     {
                         gelar_depan: typeof users[0].gelar_depan === 'undefined' ? 'kosong' : users[0].gelar_depan,
                         nama: typeof users[0].nama === 'undefined' ? '' : users[0].nama,
                         gelar_belakang: typeof users[0].gelar_blkg === 'undefined' ? 'kosong' : users[0].gelar_blkg,
-                        id_satker: noSatkerInfo || (typeof users[0].satker.id === 'undefined' ? 'kosong' : parseInt(users[0].satker.id)),
+                        id_satker: noSatkerInfo ? 0 : satkerId,
                         nama_satker: noSatkerInfo || (typeof users[0].satker.nama === 'undefined' ? 'kosong' : users[0].satker.nama),
                     }
             }
