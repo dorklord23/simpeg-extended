@@ -358,7 +358,7 @@ class Callbacks {
                     noSatkerInfo = 'Tidak ada data satker';
                 }
 
-                const satkerId = typeof users[0].satker.id === 'undefined' ? 'kosong' : parseInt(users[0].satker.id;
+                const satkerId = typeof users[0].satker.id === 'undefined' ? 'kosong' : parseInt(users[0].satker.id);
 
                 result =
                     {
