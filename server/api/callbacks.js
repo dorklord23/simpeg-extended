@@ -354,19 +354,23 @@ class Callbacks {
             if (req.query.unit === 1) {
                 console.log(users)
                 let noSatkerInfo = '';
-                if (users[0].satker === null) {
-                    noSatkerInfo = 'Tidak ada data satker';
-                }
+                let satkerId = 0;
+                let satkerName = '';
 
-                const satkerId = typeof users[0].satker.id === 'undefined' ? 'kosong' : parseInt(users[0].satker.id);
+                if (users[0].satker === null) {
+                    satkerName = 'Tidak ada data satker';
+                } else {
+                    satkerId = typeof users[0].satker.id === 'undefined' ? 'kosong' : parseInt(users[0].satker.id);
+                    satkerName = typeof users[0].satker.nama === 'undefined' ? 'kosong' : users[0].satker.nama;
+                }
 
                 result =
                     {
                         gelar_depan: typeof users[0].gelar_depan === 'undefined' ? 'kosong' : users[0].gelar_depan,
                         nama: typeof users[0].nama === 'undefined' ? '' : users[0].nama,
                         gelar_belakang: typeof users[0].gelar_blkg === 'undefined' ? 'kosong' : users[0].gelar_blkg,
-                        id_satker: noSatkerInfo ? 0 : satkerId,
-                        nama_satker: noSatkerInfo || (typeof users[0].satker.nama === 'undefined' ? 'kosong' : users[0].satker.nama),
+                        id_satker: satkerId,
+                        nama_satker: satkerName,
                     }
             }
 
